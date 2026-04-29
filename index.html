@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+
+    <!-- PT Sans, Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
+    <title>Real Scale Viewer</title>
+
+    <style>
+      div, p, h1 {
+        margin: 0;
+        padding: 0
+      }
+      
+      .main-justify {
+        margin: 0.1em;
+        padding: 0.1em;
+      }
+
+      .pt-sans {
+        font-family: 'PT Sans', sans-serif;
+      }
+
+      .bold-pt-sans {
+        font-family: 'PT Sans', sans-serif;
+        font-weight: bold;
+      }
+
+      .website-head {
+        margin: 0;
+      }
+
+      .option-panel-divider {
+        padding: 1em;
+        background-color: transparent;
+        border: 0.1em black;
+        border-style: solid;
+        border-radius: 1em;
+      }
+
+      .form-item {
+        margin: 0.1em
+      }
+
+      .form-option {
+        display: flex;
+        flex-direction: row;
+      }
+
+      .form-inner-content {
+        margin-left: 1em;
+        display: flex;
+        flex-direction: row;
+      }
+
+      .footer {
+        position: absolute;
+        padding: 1em;
+        background-color: gray;
+        border-top: 0.1em black;
+        left: 0px;
+        bottom: 0px;
+        width: 100%
+      }
+
+      .doc-padding {
+        margin-top: 1em
+      }
+
+      .footer-link-tray {
+        margin-left: 0em;
+        display: flex;
+        flex-direction: row;
+      }
+
+      .footer-link,
+      .footer-link:link,
+      .footer-link:visited,
+      .footer-link:active
+      {
+        margin-right: 1em;
+        color: white;
+      }
+
+      .footer-link:hover {
+        color: blue;
+        font-weight: bold;
+      }
+
+      .white-text {
+        color: white
+      }
+
+      .mismatch-error {
+        background-color: #FF7F00;
+        color: black;
+        margin: 0em;
+        padding: 0.1em
+      }
+
+      .no-script-error {
+        background-color: #FF5959;
+        margin: 0.1em;
+        padding: 0.1em;
+        padding-left: 1em;
+        padding-right: 1em
+      }
+
+      .view-panel-main {
+        margin-top: 0.5em
+      }
+    </style>
+
+    <script>
+      var dpi = 0;
+
+      window.addEventListener("load", () => {
+        var screenResX = document.getElementById("screenres_x");
+        var screenResY = document.getElementById("screenres_y");
+        var screenInchX = document.getElementById("screensize_x");
+        var screenInchY = document.getElementById("screensize_y");
+
+        function dpiChange() {
+
+          var srx = Number(screenResX.value);
+          var sry = Number(screenResY.value);
+          var six = Number(screenInchX.value);
+          var siy = Number(screenInchY.value);
+
+          if ((srx === NaN) || (sry === NaN) || (six === NaN) || (siy === NaN)) {
+            dpi = 0;
+          } else {
+            // for some reason to JS, divide by zero returns inf
+            var dpiX = srx / six;
+            var dpiY = sry / siy;
+
+            dpi = (dpiX + dpiY) / 2;
+            if ((dpi === Infinity) || (dpi === NaN) || (dpi <= 0)) {
+              dpi = 0;
+            }
+          }
+
+          var dpiField = document.getElementById("ppi-display");
+          if (dpi > 0) {
+            dpiField.value = String(dpi);
+          } else {
+            dpiField.value = '';
+          }
+       }
+
+        screenResX.addEventListener("change", dpiChange);
+        screenResY.addEventListener("change", dpiChange);
+        screenInchX.addEventListener("change", dpiChange);
+        screenInchY.addEventListener("change", dpiChange);
+
+        dpiChange();
+      })
+
+      const MM_CONV = 0.03937008;
+      const CM_CONV = 0.3937008;
+      const FT_CONV = 12;
+
+      function toInches(x, unit) {
+        switch (unit) {
+          case "mm":
+            // 1mm = 0.03937008in
+            return x * MM_CONV;
+
+          case "cm":
+            return x * CM_CONV;
+
+          case "ft":
+            return x * FT_CONV;
+
+          default:
+            return x, y;
+        }
+      }
+      
+      function setRenderFrame(x, y) {
+        var renderFrame = document.getElementById("render-object")
+        renderFrame.hidden = false;
+        renderFrame.style.width = x+'px';
+        renderFrame.style.height = y+'px';
+      }
+
+      function performRender() {
+        if (dpi === 0) {
+          window.alert("One or more fields are empty or errored when calculating PPI");
+          return;
+        };
+
+        var viewXfield = Number(document.getElementById("render_x").value);
+        var viewYfield = Number(document.getElementById("render_y").value);
+        var viewMeasurementField = document.getElementById("render_unit").value;
+
+        if ((viewXfield === NaN) || (viewYfield === NaN)) {
+          window.alert("One or more numeric fields were not given as numbers");
+          return
+        }
+
+        if (viewMeasurementField != "in") {
+          viewXfield = toInches(viewXfield, viewMeasurementField);
+          viewYfield = toInches(viewYfield, viewMeasurementField);
+          console.log(viewXfield);
+          console.log(viewYfield);
+        }
+
+        var px = viewXfield * dpi
+        var py = viewYfield * dpi
+
+        setRenderFrame(px, py)
+      }
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <div class="no-script-error">
+        <h3 class="website-head pt-sans white-text">JavaScript is disabled</h3>
+        <p class="white-text pt-sans">You need JavaScript enabled for this site to work as expected</p>
+      </div>
+    </noscript>
+    <div class="main-justify">
+      <h1 class="website-head pt-sans">Real Size Viewer</h1>
+
+      <div class="option-panel-divider">
+        <div class="form-option">
+          <p class="bold-pt-sans">Screen Resolution:</p>
+          <div class="form-inner-content">
+            <input class="form-item input-flex pt-sans" type="number" id="screenres_x" placeholder="X">
+
+            </input>
+            <p class="form-item pt-sans">x</p>
+            <input class="form-item input-flex pt-sans" type="number" id="screenres_y" placeholder="Y">
+
+            </input>
+          </div>
+        </div>
+        <div class="form-option">
+          <p class="bold-pt-sans">Screen Size (inches):</p>
+          <div class="form-inner-content">
+            <input class="form-item input-flex pt-sans" type="number" id="screensize_x" placeholder="X">
+
+            </input>
+            <p class="form-item pt-sans">x</p>
+            <input class="form-item input-flex pt-sans" type="number" id="screensize_y" placeholder="Y">
+
+            </input>
+          </div>
+        </div>
+
+        <div class="form-option">
+          <p class="bold-pt-sans">PPI:</p>
+          <div class="form-inner-content">
+            <input class="form-item input-flex pt-sans" type="number" id="ppi-display" readonly placeholder="PPI will appear here">
+            
+            </input>
+          </div>
+        </div>
+      </div>
+
+      <div class="doc-padding"></div>
+
+      <div class="option-panel-divider">
+        <div class="form-option">
+          <p class="bold-pt-sans">Object Size:</p>
+          <div class="form-inner-content">
+            <input class="form-item input-flex pt-sans" type="number" id="render_x" placeholder="width">
+
+            </input>
+            <p class="form-item pt-sans">x</p>
+            <input class="form-item input-flex pt-sans" type="number" id="render_y" placeholder="height">
+
+            </input>
+            <select name="measurement" id="render_unit">
+              <option value="mm">millimeters</option>
+              <option value="cm">centimeters</option>
+              <option value="in">inches</option>
+              <option value="ft">feet</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="button" class="pt-sans" onclick="performRender()">View</button>
+      </div>
+
+      <div class="doc-padding"></div>
+      <h2 class="website-head pt-sans">Object to scale:</h2>
+      <div class="real-size-view" id="view-panel-main">
+        <div id="render-object" style="background-color:red" hidden></div>
+      </div>
+
+      <div class="footer">
+        <p class="white-text bold-pt-sans">metatablecat 2026</p>
+        <div class="footer-link-tray">
+          <a href="https://github.com/metatablecat" class="footer-link pt-sans">GitHub</a>
+          <a href="license.html" class="footer-link pt-sans">Licenses</a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
